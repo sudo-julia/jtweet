@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "jtweet"
+version = "0.1.0"
+description = "manage a twitter account via text files"
+authors = ["sudo-julia <jlearning@tuta.io>"]
+license = "GPL-3.0"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+appdirs = "^1.4.4"
+TwitterAPI = "^2.6.10"
+watchdog = "^2.0.2"
+
+[tool.poetry.dev-dependencies]
+black = "^20.8b1"
+pytest = "^6.2.3"
+mypy = "^0.812"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

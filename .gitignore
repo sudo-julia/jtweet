@@ -1,0 +1,10 @@
+.mypy_cache/
+.python-version
+.vim/
+*@neomake*.py$
+build/
+dist/
+poetry.lock
+*.pyc$
+jtweet.egg-info
+*__pycache__*
