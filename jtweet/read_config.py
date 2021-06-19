@@ -7,17 +7,21 @@ import appdirs
 from jtweet import NAME, AUTHOR, VERSION
 
 
-# TODO (jam) would a class store this information more easily?
+# TODO (jam) implement a class: cleaner handling of config_dir and configparser
+# TODO (jam) create config file name/location directly off of config_dir
 config_dir: str = appdirs.user_config_dir(NAME, AUTHOR, VERSION)
 
 
-def get_config(config_file: str) -> dict[str, str]:
+def read_config(config_file: str) -> dict[str, dict[str, str]]:
     """get options from config file
     return api_api_keys, a list with the consumer key as the first value,
     and consumer secret as the second
     """
-    if not os.path.exists(config_file):
-        write_config(config_file)
+    try:
+        if not os.path.exists(config_file):
+            write_config(config_file)
+    except PermissionError as error:
+        raise NotImplementedError from error
 
     config = configparser.ConfigParser()
     config.read(config_file)
@@ -26,13 +30,15 @@ def get_config(config_file: str) -> dict[str, str]:
     config_info["keys"] = {}
     config_info["locations"] = {}
 
-    keys: configparser.SectionProxy = config["keys"]
-    config_info["keys"]["ConsumerKey"] = keys["ConsumerKey"]
-    config_info["keys"]["ConsumerSecret"] = keys["ConsumerSecret"]
-    config_info["keys"]["AccessTokenKey"] = keys["AccessTokenKey"]
-    config_info["keys"]["AccessTokenSecret"] = keys["AccessTokenSecret"]
+    # TODO (jam) should these be stripped?
+    keys: configparser.SectionProxy = config["KEYS"]
+    config_info["keys"]["ConsumerKey"] = keys["ConsumerKey"].strip()
+    config_info["keys"]["ConsumerSecret"] = keys["ConsumerSecret"].strip()
+    config_info["keys"]["AccessTokenKey"] = keys["AccessTokenKey"].strip()
+    config_info["keys"]["AccessTokenSecret"] = keys["AccessTokenSecret"].strip()
 
-    locations: configparser.SectionProxy = config["locations"]
+    locations: configparser.SectionProxy = config["LOCATIONS"]
+    config_info["locations"]["TweetDir"] = locations["TweetDir"]
     config_info["locations"]["LogLocation"] = locations["LogLocation"]
 
     for key, value in config_info["keys"].items():
@@ -40,7 +46,7 @@ def get_config(config_file: str) -> dict[str, str]:
         if os.path.exists(value):
             config_info["keys"][key] = read_key(value)
 
-    return config_info["keys"]
+    return config_info
 
 
 def write_config(config_file: str):
@@ -64,12 +70,8 @@ def write_config(config_file: str):
         "LogLocation": appdirs.user_log_dir(NAME),
     }
 
-    try:
-        with open(config_file, "w") as configfile:
-            config.write(configfile)
-    # TODO (jam) handle this differently
-    except PermissionError as error:
-        SystemExit(error)
+    with open(config_file, "w") as configfile:
+        config.write(configfile)
 
 
 def expand_tilde(key: str) -> str:
