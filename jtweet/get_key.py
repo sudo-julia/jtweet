@@ -1,36 +1,37 @@
 # -*- coding: utf-8 -*-
-"""parse censearch's config file and return API key values"""
+"""get api key values from strings or keyfiles"""
 from __future__ import annotations
 import configparser
-import os
+from pathlib import Path
 
 
-def get_config(config_file: str) -> list[str]:
+# TODO (jam) function to write the config
+def get_config(config_file: str) -> dict[str, str]:
     """get options from config file
-    return api_keys, a list with the consumer key as the first value,
+    return api_api_keys, a list with the consumer key as the first value,
     and consumer secret as the second
     """
     config = configparser.ConfigParser()
     config.read(config_file)
 
-    api_keys: list[str] = []
-    api_keys.append(config["KEYS"]["ConsumerKey"])
-    api_keys.append(config["KEYS"]["ConsumerSecret"])
+    api_keys: dict[str, str] = {}
+    api_keys["ConsumerKey"] = config["KEYS"]["ConsumerKey"]
+    api_keys["ConsumerSecret"] = config["KEYS"]["ConsumerSecret"]
+    api_keys["AccessTokenKey"] = config["KEYS"]["AccessTokenKey"]
+    api_keys["AccessTokenSecret"] = config["KEYS"]["AccessTokenSecret"]
 
-    for key in api_keys:
-        key_num: int = api_keys.index(key)
-        key = expand_tilde(key)
-        if os.path.exists(key):
-            api_keys[key_num] = read_key(key)
+    # FIXME (jam) this naming is godawful
+    for key, value in api_keys.items():
+        value = expand_tilde(key)
+        if Path(value).exists():
+            api_keys[key] = read_key(value)
 
     return api_keys
 
 
 def expand_tilde(key: str) -> str:
     """expand the tilde to home path"""
-    if key[0] == "~":
-        key = os.path.expanduser(key)
-    return key
+    return str(Path(key).expanduser())
 
 
 def read_key(location: str) -> str:

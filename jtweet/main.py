@@ -5,15 +5,19 @@ import logging
 from TwitterAPI import TwitterAPI
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
+from jtweet import handle_exception
 
 
 def post_tweet(status: str) -> bool:
     """check a status for character length, and post the tweet"""
     # TODO (jam) integrate keys (use censearch's config reader)
+    # TODO (jam) make this read what file was trying to be read from. exit w/o sorting
+    if len(status) > 280:
+        raise NotImplementedError
     api: TwitterAPI = TwitterAPI("", "", "", "")
     tweet = api.request("statuses/update", {"status": status})
     if tweet.status_code != 200:
-        raise NotImplementedError
+        handle_exception(tweet.status_code)
     return True
 
 
