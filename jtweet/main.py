@@ -3,14 +3,14 @@
 import sys
 import logging
 from TwitterAPI import TwitterAPI
+from appdirs import user_log_dir
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
-from jtweet import handle_exception
+from jtweet import handle_exception, NAME
 
 
 def post_tweet(status: str) -> bool:
     """check a status for character length, and post the tweet"""
-    # TODO (jam) integrate keys (use censearch's config reader)
     # TODO (jam) make this read what file was trying to be read from. exit w/o sorting
     if len(status) > 280:
         raise NotImplementedError
@@ -23,10 +23,11 @@ def post_tweet(status: str) -> bool:
 
 def main():
     """:"""
+    # TODO (jam) inform user of log location, add section in config
     logging.basicConfig(
+        filename=user_log_dir(NAME),
         level=logging.INFO,
         format="%(asctime)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
     )
     # TODO (jam) set this path to whatever dir the user sets in config
     path = sys.argv[1] if len(sys.argv) > 1 else "."

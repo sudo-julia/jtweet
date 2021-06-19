@@ -2,12 +2,13 @@
 """get api key values from strings or keyfiles"""
 from __future__ import annotations
 import configparser
-from pathlib import Path
-from appdirs import user_config_dir
+import os
+import appdirs
 from jtweet import NAME, AUTHOR, VERSION
 
 
-config_dir: str = user_config_dir(NAME, AUTHOR, VERSION)
+# TODO (jam) would a class store this information more easily?
+config_dir: str = appdirs.user_config_dir(NAME, AUTHOR, VERSION)
 
 
 def get_config(config_file: str) -> dict[str, str]:
@@ -15,38 +16,52 @@ def get_config(config_file: str) -> dict[str, str]:
     return api_api_keys, a list with the consumer key as the first value,
     and consumer secret as the second
     """
+    if not os.path.exists(config_file):
+        write_config(config_file)
+
     config = configparser.ConfigParser()
     config.read(config_file)
 
-    api_keys: dict[str, str] = {}
-    KEYS: configparser.SectionProxy = config["KEYS"]  # pylint: disable=C0103
-    api_keys["ConsumerKey"] = KEYS["ConsumerKey"]
-    api_keys["ConsumerSecret"] = KEYS["ConsumerSecret"]
-    api_keys["AccessTokenKey"] = KEYS["AccessTokenKey"]
-    api_keys["AccessTokenSecret"] = KEYS["AccessTokenSecret"]
+    config_info: dict[str, dict[str, str]] = {}
+    config_info["keys"] = {}
+    config_info["locations"] = {}
 
-    # FIXME (jam) this naming is godawful
-    for key, value in api_keys.items():
+    keys: configparser.SectionProxy = config["keys"]
+    config_info["keys"]["ConsumerKey"] = keys["ConsumerKey"]
+    config_info["keys"]["ConsumerSecret"] = keys["ConsumerSecret"]
+    config_info["keys"]["AccessTokenKey"] = keys["AccessTokenKey"]
+    config_info["keys"]["AccessTokenSecret"] = keys["AccessTokenSecret"]
+
+    locations: configparser.SectionProxy = config["locations"]
+    config_info["locations"]["LogLocation"] = locations["LogLocation"]
+
+    for key, value in config_info["keys"].items():
         value = expand_tilde(key)
-        if Path(value).exists():
-            api_keys[key] = read_key(value)
+        if os.path.exists(value):
+            config_info["keys"][key] = read_key(value)
 
-    return api_keys
+    return config_info["keys"]
 
 
 def write_config(config_file: str):
     """write the config file"""
-    if not Path(config_dir).exists():
-        Path(config_dir).mkdir(parents=True)
+    if not os.path.exists(config_file):
+        os.makedirs(config_dir)
     config: configparser.ConfigParser = configparser.ConfigParser(allow_no_value=True)
 
-    # TODO (jam) check if this comment is valid
-    config["KEYS"] = {
-        "; Value can be the key itself, or the filepath to a file containing it": "",
+    config["KEYS"] = {  # type: ignore -- pass this type checking for the config comment
+        "; Value can be the key itself, or the filepath to a file containing it": None,
         "ConsumerKey": "",
         "ConsumerSecret": "",
         "AccessTokenKey": "",
         "AccessTokenSecret": "",
+    }
+
+    config["LOCATIONS"] = {  # type: ignore
+        f"; TweetDir is the location that {NAME} will watch for new tweets.": None,
+        "TweetDir": appdirs.user_data_dir(NAME),
+        "; Location of the logfile": None,
+        "LogLocation": appdirs.user_log_dir(NAME),
     }
 
     try:
@@ -59,7 +74,7 @@ def write_config(config_file: str):
 
 def expand_tilde(key: str) -> str:
     """expand the tilde to home path"""
-    return str(Path(key).expanduser())
+    return os.path.expanduser(key)
 
 
 def read_key(location: str) -> str:
