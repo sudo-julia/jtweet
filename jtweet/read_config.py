@@ -7,71 +7,75 @@ import appdirs
 from jtweet import NAME, AUTHOR, VERSION
 
 
-# TODO (jam) implement a class: cleaner handling of config_dir and configparser
-# TODO (jam) create config file name/location directly off of config_dir
-config_dir: str = appdirs.user_config_dir(NAME, AUTHOR, VERSION)
+class Config:
+    """config file manager"""
 
+    def __init__(self):
+        """initialize the class pointing at a config location"""
+        # TODO (jam) change these to the defaults, let user enter their own as args
+        self.config_dir: str = appdirs.user_config_dir(NAME, AUTHOR, VERSION)
+        self.config_file: str = f"{self.config_dir}/config.ini"
 
-def read_config(config_file: str) -> dict[str, dict[str, str]]:
-    """get options from config file
-    return api_api_keys, a list with the consumer key as the first value,
-    and consumer secret as the second
-    """
-    try:
-        if not os.path.exists(config_file):
-            write_config(config_file)
-    except PermissionError as error:
-        raise NotImplementedError from error
+    def read_config(self) -> dict[str, dict[str, str]]:
+        """get options from config file
+        return api_api_keys, a list with the consumer key as the first value,
+        and consumer secret as the second
+        """
+        try:
+            if not os.path.exists(self.config_file):
+                self.write_config()
+        except PermissionError as error:
+            raise NotImplementedError from error
 
-    config = configparser.ConfigParser()
-    config.read(config_file)
+        config = configparser.ConfigParser()
+        config.read(self.config_file)
 
-    config_info: dict[str, dict[str, str]] = {}
-    config_info["keys"] = {}
-    config_info["locations"] = {}
+        config_info: dict[str, dict[str, str]] = {}
+        config_info["keys"] = {}
+        config_info["locations"] = {}
 
-    # TODO (jam) should these be stripped?
-    keys: configparser.SectionProxy = config["KEYS"]
-    config_info["keys"]["ConsumerKey"] = keys["ConsumerKey"]
-    config_info["keys"]["ConsumerSecret"] = keys["ConsumerSecret"]
-    config_info["keys"]["AccessTokenKey"] = keys["AccessTokenKey"]
-    config_info["keys"]["AccessTokenSecret"] = keys["AccessTokenSecret"]
+        keys: configparser.SectionProxy = config["KEYS"]
+        config_info["keys"]["ConsumerKey"] = keys["ConsumerKey"]
+        config_info["keys"]["ConsumerSecret"] = keys["ConsumerSecret"]
+        config_info["keys"]["AccessTokenKey"] = keys["AccessTokenKey"]
+        config_info["keys"]["AccessTokenSecret"] = keys["AccessTokenSecret"]
 
-    locations: configparser.SectionProxy = config["LOCATIONS"]
-    config_info["locations"]["TweetDir"] = locations["TweetDir"]
-    config_info["locations"]["LogLocation"] = locations["LogLocation"]
+        locations: configparser.SectionProxy = config["LOCATIONS"]
+        config_info["locations"]["TweetDir"] = locations["TweetDir"]
+        config_info["locations"]["LogLocation"] = locations["LogLocation"]
 
-    for key, value in config_info["keys"].items():
-        value = expand_tilde(key)
-        if os.path.exists(value):
-            config_info["keys"][key] = read_key(value)
+        for key, value in config_info["keys"].items():
+            value = expand_tilde(key)
+            if os.path.exists(value):
+                config_info["keys"][key] = read_key(value)
 
-    return config_info
+        return config_info
 
+    def write_config(self):
+        """write the config file"""
+        if not os.path.exists(self.config_file):
+            os.makedirs(self.config_dir)
+        config: configparser.ConfigParser = configparser.ConfigParser(
+            allow_no_value=True
+        )
 
-def write_config(config_file: str):
-    """write the config file"""
-    if not os.path.exists(config_file):
-        os.makedirs(config_dir)
-    config: configparser.ConfigParser = configparser.ConfigParser(allow_no_value=True)
+        config["KEYS"] = {  # type: ignore
+            "; Value can be the key itself or a filepath to a file containing it": None,
+            "ConsumerKey": "",
+            "ConsumerSecret": "",
+            "AccessTokenKey": "",
+            "AccessTokenSecret": "",
+        }
 
-    config["KEYS"] = {  # type: ignore -- pass this type checking for the config comment
-        "; Value can be the key itself, or the filepath to a file containing it": None,
-        "ConsumerKey": "",
-        "ConsumerSecret": "",
-        "AccessTokenKey": "",
-        "AccessTokenSecret": "",
-    }
+        config["LOCATIONS"] = {  # type: ignore
+            f"; TweetDir is the location that {NAME} will watch for new tweets.": None,
+            "TweetDir": appdirs.user_data_dir(NAME),
+            "; Location of the logfile": None,
+            "LogLocation": appdirs.user_log_dir(NAME),
+        }
 
-    config["LOCATIONS"] = {  # type: ignore
-        f"; TweetDir is the location that {NAME} will watch for new tweets.": None,
-        "TweetDir": appdirs.user_data_dir(NAME),
-        "; Location of the logfile": None,
-        "LogLocation": appdirs.user_log_dir(NAME),
-    }
-
-    with open(config_file, "w") as configfile:
-        config.write(configfile)
+        with open(self.config_file, "w") as configfile:
+            config.write(configfile)
 
 
 def expand_tilde(key: str) -> str:
