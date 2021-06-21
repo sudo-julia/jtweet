@@ -32,10 +32,10 @@ def read_config(config_file: str) -> dict[str, dict[str, str]]:
 
     # TODO (jam) should these be stripped?
     keys: configparser.SectionProxy = config["KEYS"]
-    config_info["keys"]["ConsumerKey"] = keys["ConsumerKey"].strip()
-    config_info["keys"]["ConsumerSecret"] = keys["ConsumerSecret"].strip()
-    config_info["keys"]["AccessTokenKey"] = keys["AccessTokenKey"].strip()
-    config_info["keys"]["AccessTokenSecret"] = keys["AccessTokenSecret"].strip()
+    config_info["keys"]["ConsumerKey"] = keys["ConsumerKey"]
+    config_info["keys"]["ConsumerSecret"] = keys["ConsumerSecret"]
+    config_info["keys"]["AccessTokenKey"] = keys["AccessTokenKey"]
+    config_info["keys"]["AccessTokenSecret"] = keys["AccessTokenSecret"]
 
     locations: configparser.SectionProxy = config["LOCATIONS"]
     config_info["locations"]["TweetDir"] = locations["TweetDir"]
