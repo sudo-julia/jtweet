@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """test read_key"""
 from tempfile import NamedTemporaryFile
-from jtweet.read_config import read_key
+from txtwt.read_config import read_key
 
 
 def test_read_key():

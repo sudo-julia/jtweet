@@ -4,17 +4,16 @@ from __future__ import annotations
 import configparser
 import os
 import appdirs
-from jtweet import NAME, AUTHOR, VERSION
+from txtwt import NAME, AUTHOR, VERSION
 
 
 class Config:
     """config file manager"""
 
-    def __init__(self):
+    def __init__(self, config_dir: str = None, config_file: str = None):
         """initialize the class pointing at a config location"""
-        # TODO (jam) change these to the defaults, let user enter their own as args
-        self.config_dir: str = appdirs.user_config_dir(NAME, AUTHOR, VERSION)
-        self.config_file: str = f"{self.config_dir}/config.ini"
+        self.config_dir = config_dir or appdirs.user_config_dir(NAME, AUTHOR, VERSION)
+        self.config_file = config_file or f"{self.config_dir}/config.ini"
 
     def read_config(self) -> dict[str, dict[str, str]]:
         """get options from config file
@@ -53,11 +52,14 @@ class Config:
 
     def write_config(self):
         """write the config file"""
-        if not os.path.exists(self.config_file):
-            os.makedirs(self.config_dir)
-        config: configparser.ConfigParser = configparser.ConfigParser(
-            allow_no_value=True
-        )
+        try:
+            if not os.path.exists(self.config_file):
+                os.makedirs(self.config_dir)
+            config: configparser.ConfigParser = configparser.ConfigParser(
+                allow_no_value=True
+            )
+        except PermissionError as error:
+            raise NotImplementedError from error
 
         config["KEYS"] = {  # type: ignore
             "; Value can be the key itself or a filepath to a file containing it": None,

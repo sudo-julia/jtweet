@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """test expand_tilde"""
 from pathlib import Path
-from jtweet.read_config import expand_tilde
+from txtwt.read_config import expand_tilde
 
 
 def test_expand_tilde():

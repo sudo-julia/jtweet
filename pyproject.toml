@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "jtweet"
+name = "txtwt"
 version = "0.1.0"
 description = "manage a twitter account via text files"
 authors = ["sudo-julia <jlearning@tuta.io>"]

@@ -5,7 +5,7 @@ from configparser import ConfigParser
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 import pytest
-from jtweet.read_config import read_config
+from txtwt.read_config import Config
 
 
 @pytest.mark.skip
@@ -28,9 +28,9 @@ def test_read_config():
             "LogLocation": "/fake/log/dir",
         }
 
-        # FIXME (jam) something here isn't working
         config.write(tmpconf)
-        conf: dict[str, dict[str, str]] = read_config(tmpconf.name)
+        myconfig = Config(config_file=tmpconf.name)
+        conf: dict[str, dict[str, str]] = myconfig.read_config()
 
     assert conf["keys"]["ConsumerKey"] == "consumerkey"
     assert conf["keys"]["ConsumerSecret"] == "CONSUMERSECRET"

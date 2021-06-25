@@ -2,7 +2,7 @@
 """variables to import"""
 from requests import exceptions
 
-NAME: str = "jtweet"
+NAME: str = "txtwt"
 AUTHOR: str = "sudo-julia"
 VERSION: str = "0.1.0"
 

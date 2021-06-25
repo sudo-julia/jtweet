@@ -6,7 +6,7 @@ from TwitterAPI import TwitterAPI
 from appdirs import user_log_dir
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
-from jtweet import handle_exception, NAME
+from txtwt import handle_exception, NAME
 
 
 def post_tweet(status: str) -> bool:
