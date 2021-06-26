@@ -1,92 +1,123 @@
 # -*- coding: utf-8 -*-
 """get api key values from strings or keyfiles"""
 from __future__ import annotations
-import configparser
-import os
+from configparser import ConfigParser, SectionProxy
+from pathlib import Path
 import appdirs
-from txtwt import NAME, AUTHOR, VERSION
+from txtwt import NAME, AUTHOR
 
 
+# TODO (jam) document the entire class
 class Config:
-    """config file manager"""
+    """
+    configuration file manager
 
-    def __init__(self, config_dir: str = None, config_file: str = None):
-        """initialize the class pointing at a config location"""
-        self.config_dir = config_dir or appdirs.user_config_dir(NAME, AUTHOR, VERSION)
-        self.config_file = config_file or f"{self.config_dir}/config.ini"
+    attributes:
+        config_file: str
+            a path to the configuration file.
+            defaults to {config_dir}/config.ini
 
-    def read_config(self) -> dict[str, dict[str, str]]:
+    methods:
+        read_config(config_file: str)
+            reads a configuration file and returns the found values
+        write_config(config_file: str)
+            writes a configuration file
+    """
+
+    def __init__(
+        self,
+        config_file: str | Path = None,
+        template=None,
+    ):
+        """
+        parameters:
+            config_file: str | Path = None
+                the location of the configuration file
+        """
+        config_dir: str = f"{appdirs.user_config_dir(NAME, AUTHOR)}"
+        self.config_file: str | Path = config_file or f"{config_dir}/config.ini"
+        # TODO (jam) create config sections with a loaded template, as opposed to static
+        self.template = template or {}
+
+    def read_config(self, config_file: str | Path = None) -> dict[str, dict[str, str]]:
         """get options from config file
         return api_api_keys, a list with the consumer key as the first value,
         and consumer secret as the second
         """
-        try:
-            if not os.path.exists(self.config_file):
-                self.write_config()
-        except PermissionError as error:
-            raise NotImplementedError from error
+        config_file = config_file or self.config_file
+        config_file = Path(config_file)
+        config = ConfigParser()
+        config.read(config_file)
 
-        config = configparser.ConfigParser()
-        config.read(self.config_file)
+        try:
+            config.read(config_file)
+        except FileNotFoundError:
+            print("Config file not found. Creating one now...")
+            self.write_config(config_file)
+        except PermissionError as error:
+            raise SystemExit from error
 
         config_info: dict[str, dict[str, str]] = {}
         config_info["keys"] = {}
         config_info["locations"] = {}
 
-        keys: configparser.SectionProxy = config["KEYS"]
-        config_info["keys"]["ConsumerKey"] = keys["ConsumerKey"]
-        config_info["keys"]["ConsumerSecret"] = keys["ConsumerSecret"]
-        config_info["keys"]["AccessTokenKey"] = keys["AccessTokenKey"]
-        config_info["keys"]["AccessTokenSecret"] = keys["AccessTokenSecret"]
+        keys: SectionProxy = config["KEYS"]
+        config_info["keys"]["consumer_key"] = keys["consumer_key"]
+        config_info["keys"]["consumer_secret"] = keys["consumer_secret"]
+        config_info["keys"]["access_token_key"] = keys["AccessTokenKey"]
+        config_info["keys"]["access_token_secret"] = keys["access_token_secret"]
 
-        locations: configparser.SectionProxy = config["LOCATIONS"]
-        config_info["locations"]["TweetDir"] = locations["TweetDir"]
-        config_info["locations"]["LogLocation"] = locations["LogLocation"]
+        locations: SectionProxy = config["LOCATIONS"]
+        config_info["locations"]["tweet_dir"] = locations["tweet_dir"]
+        config_info["locations"]["log_location"] = locations["log_location"]
 
         for key, value in config_info["keys"].items():
-            value = expand_tilde(key)
-            if os.path.exists(value):
+            value = expand_tilde(key)  # value gets returned as a Path object
+            if value.exists():
                 config_info["keys"][key] = read_key(value)
 
         return config_info
 
-    def write_config(self):
+    def write_config(self, config_file: str | Path = None):
         """write the config file"""
-        try:
-            if not os.path.exists(self.config_file):
-                os.makedirs(self.config_dir)
-            config: configparser.ConfigParser = configparser.ConfigParser(
-                allow_no_value=True
-            )
-        except PermissionError as error:
-            raise NotImplementedError from error
+        config_file = config_file or self.config_file
+        config_file = Path(config_file)
+
+        config: ConfigParser = ConfigParser(allow_no_value=True)
 
         config["KEYS"] = {  # type: ignore
             "; Value can be the key itself or a filepath to a file containing it": None,
-            "ConsumerKey": "",
-            "ConsumerSecret": "",
-            "AccessTokenKey": "",
-            "AccessTokenSecret": "",
+            "consumer_key": "",
+            "consumer_secret": "",
+            "access_token_key": "",
+            "access_token_secret": "",
         }
 
         config["LOCATIONS"] = {  # type: ignore
-            f"; TweetDir is the location that {NAME} will watch for new tweets.": None,
-            "TweetDir": appdirs.user_data_dir(NAME),
+            f"; tweet_dir is the location that {NAME} will watch for new tweets.": None,
+            "tweet_dir": appdirs.user_data_dir(NAME),
             "; Location of the logfile": None,
-            "LogLocation": appdirs.user_log_dir(NAME),
+            "log_location": appdirs.user_log_dir(NAME),
         }
 
-        with open(self.config_file, "w") as configfile:
-            config.write(configfile)
+        try:
+            if not config_file.parent.exists():
+                config_file.parent.mkdir(parents=True)
+            with config_file.open("w") as configfile:
+                config.write(configfile)
+        except PermissionError as error:
+            raise SystemExit from error
+
+        print(f"Configuration file created at {config_file}")
 
 
-def expand_tilde(key: str) -> str:
+def expand_tilde(key: str) -> Path:
     """expand the tilde to home path"""
-    return os.path.expanduser(key)
+    return Path(key).expanduser()
 
 
-def read_key(location: str) -> str:
+def read_key(location: Path) -> str:
     """get key values from locations"""
-    with open(location) as file:
+    with location.open() as file:
         value: str = file.read().strip()
     return value
