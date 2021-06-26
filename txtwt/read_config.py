@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""get api key values from strings or keyfiles"""
+"""
+configuration file operations
+"""
 from __future__ import annotations
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
@@ -7,7 +9,6 @@ import appdirs
 from txtwt import NAME, AUTHOR
 
 
-# TODO (jam) document the entire class
 class Config:
     """
     configuration file manager
@@ -18,9 +19,9 @@ class Config:
             defaults to {config_dir}/config.ini
 
     methods:
-        read_config(config_file: str)
+        read_config(config_file: str | Path = None)
             reads a configuration file and returns the found values
-        write_config(config_file: str)
+        write_config(config_file: str | Path = None)
             writes a configuration file
     """
 
@@ -31,7 +32,7 @@ class Config:
     ):
         """
         parameters:
-            config_file: str | Path = None
+            config_file: str | Path, optional (default: self.config_file)
                 the location of the configuration file
         """
         config_dir: str = f"{appdirs.user_config_dir(NAME, AUTHOR)}"
@@ -40,9 +41,13 @@ class Config:
         self.template = template or {}
 
     def read_config(self, config_file: str | Path = None) -> dict[str, dict[str, str]]:
-        """get options from config file
-        return api_api_keys, a list with the consumer key as the first value,
-        and consumer secret as the second
+        """
+        reads sections from an ini file
+        returns a dictionary of dictionaries, {"section": {"key": "value"}}
+
+        parameters:
+            config_file: str | Path, optional (default: self.config_file)
+                the configuration file to read from
         """
         config_file = config_file or self.config_file
         config_file = Path(config_file)
@@ -72,14 +77,20 @@ class Config:
         config_info["locations"]["log_location"] = locations["log_location"]
 
         for key, value in config_info["keys"].items():
-            value = expand_tilde(key)  # value gets returned as a Path object
+            value = Path(value).expanduser()
             if value.exists():
                 config_info["keys"][key] = read_key(value)
 
         return config_info
 
     def write_config(self, config_file: str | Path = None):
-        """write the config file"""
+        """
+        writes a default template to a configuration file
+
+        parameters:
+            config_file: str | Path, optional (default: self.config_file)
+                the configuration file to read from
+        """
         config_file = config_file or self.config_file
         config_file = Path(config_file)
 
@@ -111,13 +122,13 @@ class Config:
         print(f"Configuration file created at {config_file}")
 
 
-def expand_tilde(key: str) -> Path:
-    """expand the tilde to home path"""
-    return Path(key).expanduser()
-
-
 def read_key(location: Path) -> str:
-    """get key values from locations"""
+    """
+    reads a key from a text file containing one line
+
+    parameters:
+        location: Path
+            the location of the file to read from
+    """
     with location.open() as file:
-        value: str = file.read().strip()
-    return value
+        return file.read().strip()
