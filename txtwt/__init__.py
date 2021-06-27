@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """variables to import"""
+from appdirs import user_config_dir
 from requests import exceptions
 
 NAME: str = "txtwt"
 AUTHOR: str = "sudo-julia"
 VERSION: str = "0.1.0"
+
+conf_dir: str = user_config_dir(NAME, AUTHOR)
 
 
 def handle_exception(status_code: int):

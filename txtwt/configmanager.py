@@ -6,14 +6,15 @@ from __future__ import annotations
 from configparser import ConfigParser, SectionProxy
 from pathlib import Path
 import appdirs
-from txtwt import NAME, AUTHOR
 
 
-class Config:
+class ConfigManager:
     """
     configuration file manager
 
     attributes:
+        project: str
+            the name of the project - used to create directories
         config_file: str
             a path to the configuration file.
             defaults to {config_dir}/config.ini
@@ -27,15 +28,19 @@ class Config:
 
     def __init__(
         self,
+        project: str,
         config_file: str | Path = None,
         template=None,
     ):
         """
         parameters:
+            project: str
+                the name of the project
             config_file: str | Path, optional (default: self.config_file)
                 the location of the configuration file
         """
-        config_dir: str = f"{appdirs.user_config_dir(NAME, AUTHOR)}"
+        self.project = project
+        config_dir: str = f"{appdirs.user_config_dir(self.project)}"
         self.config_file: str | Path = config_file or f"{config_dir}/config.ini"
         # TODO (jam) create config sections with a loaded template, as opposed to static
         self.template = template or {}
@@ -73,7 +78,6 @@ class Config:
         config_info["keys"]["access_token_secret"] = keys["access_token_secret"]
 
         locations: SectionProxy = config["LOCATIONS"]
-        config_info["locations"]["tweet_dir"] = locations["tweet_dir"]
         config_info["locations"]["log_location"] = locations["log_location"]
 
         for key, value in config_info["keys"].items():
@@ -105,10 +109,8 @@ class Config:
         }
 
         config["LOCATIONS"] = {  # type: ignore
-            f"; tweet_dir is the location that {NAME} will watch for new tweets.": None,
-            "tweet_dir": appdirs.user_data_dir(NAME),
             "; Location of the logfile": None,
-            "log_location": appdirs.user_log_dir(NAME),
+            "log_location": appdirs.user_log_dir(self.project),
         }
 
         try:

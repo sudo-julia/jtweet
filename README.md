@@ -1,6 +1,6 @@
 # txtwt
 
-manage a twitter account via text files
+manage a twitter account via the command-line
 
 ## TODO
 
