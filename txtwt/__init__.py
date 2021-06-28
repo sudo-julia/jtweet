@@ -7,7 +7,7 @@ NAME: str = "txtwt"
 AUTHOR: str = "sudo-julia"
 VERSION: str = "0.1.0"
 
-conf_dir: str = user_config_dir(NAME, AUTHOR)
+conf_dir: str = f"{user_config_dir(NAME, AUTHOR)}/config.ini"
 
 
 def handle_exception(status_code: int):

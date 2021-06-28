@@ -11,7 +11,7 @@ def post_tweet(status: str, keys: dict[str, str]) -> bool:
     """check a status for character length, and post the tweet"""
     # TODO (jam) make this read what file was trying to be read from. exit w/o sorting
     if len(status) > 280:
-        print("Tweet too long.")
+        print(f"Status too long at {len(status)} characters. Twitter's limit is 280.")
         raise NotImplementedError
     api: TwitterAPI = TwitterAPI(
         keys["consumer_key"],
@@ -43,7 +43,8 @@ def main():
     args: Namespace = parser.parse_args()
     myconf = ConfigManager("txtwt", config_file=args.config)
     myvars = myconf.read_config()
-    del myvars
+    keys: dict[str, str] = myvars["api keys"]
+    print(keys)
 
 
 if __name__ == "__main__":

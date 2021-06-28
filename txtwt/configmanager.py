@@ -29,7 +29,7 @@ class ConfigManager:
     def __init__(
         self,
         project: str,
-        config_file: str | Path = None,
+        config_file=None,
         template=None,
     ):
         """
@@ -40,7 +40,7 @@ class ConfigManager:
                 the location of the configuration file
         """
         self.project = project
-        config_dir: str = f"{appdirs.user_config_dir(self.project)}"
+        config_dir: str = appdirs.user_config_dir(self.project)
         self.config_file: str | Path = config_file or f"{config_dir}/config.ini"
         # TODO (jam) create config sections with a loaded template, as opposed to static
         self.template = template or {}
@@ -56,7 +56,7 @@ class ConfigManager:
         """
         config_file = config_file or self.config_file
         config_file = Path(config_file)
-        config = ConfigParser()
+        config: ConfigParser = ConfigParser()
         config.read(config_file)
 
         try:
@@ -68,22 +68,22 @@ class ConfigManager:
             raise SystemExit from error
 
         config_info: dict[str, dict[str, str]] = {}
-        config_info["keys"] = {}
+        config_info["api keys"] = {}
         config_info["locations"] = {}
 
-        keys: SectionProxy = config["KEYS"]
-        config_info["keys"]["consumer_key"] = keys["consumer_key"]
-        config_info["keys"]["consumer_secret"] = keys["consumer_secret"]
-        config_info["keys"]["access_token_key"] = keys["AccessTokenKey"]
-        config_info["keys"]["access_token_secret"] = keys["access_token_secret"]
+        keys: SectionProxy = config["API Keys"]
+        config_info["api keys"]["consumer_key"] = keys["consumer_key"]
+        config_info["api keys"]["consumer_secret"] = keys["consumer_secret"]
+        config_info["api keys"]["access_token_key"] = keys["access_token_key"]
+        config_info["api keys"]["access_token_secret"] = keys["access_token_secret"]
 
-        locations: SectionProxy = config["LOCATIONS"]
+        locations: SectionProxy = config["Locations"]
         config_info["locations"]["log_location"] = locations["log_location"]
 
-        for key, value in config_info["keys"].items():
+        for key, value in config_info["api keys"].items():
             value = Path(value).expanduser()
             if value.exists():
-                config_info["keys"][key] = read_key(value)
+                config_info["api keys"][key] = read_key(value)
 
         return config_info
 
@@ -100,7 +100,7 @@ class ConfigManager:
 
         config: ConfigParser = ConfigParser(allow_no_value=True)
 
-        config["KEYS"] = {  # type: ignore
+        config["API Keys"] = {  # type: ignore
             "; Value can be the key itself or a filepath to a file containing it": None,
             "consumer_key": "",
             "consumer_secret": "",
@@ -108,7 +108,7 @@ class ConfigManager:
             "access_token_secret": "",
         }
 
-        config["LOCATIONS"] = {  # type: ignore
+        config["Locations"] = {  # type: ignore
             "; Location of the logfile": None,
             "log_location": appdirs.user_log_dir(self.project),
         }
