@@ -29,21 +29,23 @@ class ConfigManager:
     def __init__(
         self,
         project: str,
+        template: dict[str, dict[str, str]],
         config_file=None,
-        template=None,
     ):
         """
         parameters:
             project: str
                 the name of the project
+            template: dict[str, dict[str, str]]
+                a dictionary containing the expected configuration template
             config_file: str | Path, optional (default: self.config_file)
                 the location of the configuration file
         """
         self.project = project
+        self.template = template
         config_dir: str = appdirs.user_config_dir(self.project)
         self.config_file: str | Path = config_file or f"{config_dir}/config.ini"
         # TODO (jam) create config sections with a loaded template, as opposed to static
-        self.template = template or {}
 
     def read_config(self, config_file: str | Path = None) -> dict[str, dict[str, str]]:
         """

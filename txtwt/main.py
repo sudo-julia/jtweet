@@ -41,7 +41,18 @@ def main():
     main_args.add_argument("--version", action="version", version=f"txtwt v{VERSION}")
 
     args: Namespace = parser.parse_args()
-    myconf = ConfigManager("txtwt", config_file=args.config)
+    # TODO (jam) typehint
+    config_template = {
+        "API Keys": {
+            "consumer_key": "",
+            "consumer_secret": "",
+            "access_token_key": "",
+            "access_token_secret": "",
+        },
+        "Locations": {"log_location": ""},
+    }
+
+    myconf = ConfigManager("txtwt", config_template, config_file=args.config)
     myvars = myconf.read_config()
     keys: dict[str, str] = myvars["api keys"]
     print(keys)
