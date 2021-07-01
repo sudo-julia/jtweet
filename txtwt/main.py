@@ -2,12 +2,13 @@
 """send tweets from textfiles"""
 from __future__ import annotations
 from argparse import ArgumentParser, _ArgumentGroup, Namespace
+from typing import Dict
 from TwitterAPI import TwitterAPI
 from txtwt import handle_exception, conf_dir, VERSION
 from txtwt.configmanager import ConfigManager
 
 
-def post_tweet(status: str, keys: dict[str, str]) -> bool:
+def post_tweet(status: str, keys: Dict[str, str]) -> bool:
     """check a status for character length, and post the tweet"""
     # TODO (jam) make this read what file was trying to be read from. exit w/o sorting
     if len(status) > 280:
@@ -54,7 +55,7 @@ def main():
 
     myconf = ConfigManager("txtwt", config_template, config_file=args.config)
     myvars = myconf.read_config()
-    keys: dict[str, str] = myvars["api keys"]
+    keys: Dict[str, str] = myvars["api keys"]
     print(keys)
 
 

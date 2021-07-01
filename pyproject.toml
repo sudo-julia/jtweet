@@ -6,7 +6,7 @@ authors = ["sudo-julia <jlearning@tuta.io>"]
 license = "GPL-3.0"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 appdirs = "^1.4.4"
 TwitterAPI = "^2.6.10"
 
