@@ -6,7 +6,7 @@ from __future__ import annotations
 from configparser import ConfigParser
 from io import StringIO
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union
 import appdirs
 
 
@@ -31,7 +31,7 @@ class ConfigManager:
     def __init__(
         self,
         project: str,
-        template: Dict[str, Dict[str, str]],
+        template: Dict[str, Dict[str, Union[str, None]]],
         config_file=None,
     ):
         """
@@ -115,7 +115,7 @@ class ConfigManager:
 
         # populate the config file with the template
         for section in self.template.keys():
-            parser[section] = self.template[section]
+            parser[section] = self.template[section]  # type: ignore
 
         try:
             if not config_file.parent.exists():

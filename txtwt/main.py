@@ -42,9 +42,9 @@ def main():
     main_args.add_argument("--version", action="version", version=f"txtwt v{VERSION}")
 
     args: Namespace = parser.parse_args()
-    # TODO (jam) typehint
     config_template = {
         "API Keys": {
+            "; value can be the key itself or a path to a keyfile": None,
             "consumer_key": "",
             "consumer_secret": "",
             "access_token_key": "",
